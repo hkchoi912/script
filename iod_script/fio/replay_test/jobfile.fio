@@ -1,0 +1,20 @@
+; example: DEVICE=nvme1n1 LOG_PATH=${RESULT_LOG_PATH}/${NAME} fio jobfile.fio > /dev/null 
+[global]
+thread=1
+direct=1
+ioengine=libaio
+filename=${DEVICE}
+iodepth=4
+bs=4k
+write_lat_log=${LOG_PATH}
+
+[write-phase]
+rw=write
+size=1G
+log_avg_msec=1
+
+[read-phase]
+stonewall
+rw=read
+size=1G
+log_avg_msec=1
