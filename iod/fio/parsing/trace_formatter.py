@@ -30,8 +30,8 @@ def format_file(filepath):
     print("     collect data...")
 
     for i in range(1, len(df)):
-        # and df['exec'][i] == opt['program']
-        if df['event'][i] == 'D' and opt['iotype'] in df['rwsb'][i]:
+        # and opt['program'] in df['exec'][i] 
+        if df['event'][i] == 'D' and opt['iotype'] in df['rwsb'][i] :
             # list element: [[timestamp, interval, address], ... ]
             output.append(
                 [df['timestamp'][i], 0, df['address'][i], df['bs'][i]])
