@@ -64,12 +64,18 @@ main() {
   # fi
 
   sleep 1
+  # rm -rf /home/data/983dct-non-iod/test.0.0
   # rm -rf /home/data/983dct-iod/test.0.0
 
-  # sleep 1
-  # fio --ioengine=libaio --iodepth=1 --name=/home/data/983dct-non-iod/test --rw=write --bs=1MB --size=1.7T
-  # fio --ioengine=libaio --iodepth=1 --name=/home/data/983dct-iod/test --rw=write --bs=1MB --size=425G
+
   sleep 1
+  # fio --ioengine=libaio --iodepth=1 --name=/home/data/983dct-non-iod/test --rw=write --bs=1MB --size=1.7T
+  # fio --ioengine=libaio --iodepth=1 --name=/home/data/983dct-iod/test --rw=write --bs=1MB --size=370G
+  
+  sleep 1
+  sync
+  echo "  Flushing..."
+  nvme flush $DEVICE -n $NAMESPACE
 
   echo "  blktrace start..."
   blktrace_start
