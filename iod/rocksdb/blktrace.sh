@@ -7,7 +7,7 @@ DEVICE=$CHARACTER"n"$NAMESPACE
 
 #blktrace
 BLKTRACE_RESULT_PATH="/home/data/iod/DB-data"
-RUNTIME=3600    # 1h
+RUNTIME=1200    # 1h
 
 #rocksdb
 ROCKSDB_PATH="/home/hkchoi/Downloads/iod/facebook/rocksdb"
@@ -51,17 +51,17 @@ main() {
   fi
 
 
-  # if [ $# -ne 1 ]; then
-  #   echo $#
-  #   echo "Need to make initial DB? no=0, yes=1"
-  #   kill -15 $$
-  # elif [ $1 -eq "1" ]; then
-  #   rm -rf ${DB_PATH}/*
+  if [ $# -ne 1 ]; then
+    echo $#
+    echo "Need to make initial DB? no=0, yes=1"
+    kill -15 $$
+  elif [ $1 -eq "1" ]; then
+    rm -rf ${DB_PATH}/*
 
-  #   ${ROCKSDB_PATH}/db_bench –benchmarks=fillrandom –perf_level=3 \
-  #     -use_direct_io_for_flush_and_compaction=true -use_direct_reads=true -cache_size=268435456 \
-  #     -key_size=48 -value_size=43 -num=50000000 -db=${DB_PATH}
-  # fi
+    ${ROCKSDB_PATH}/db_bench –benchmarks=fillrandom –perf_level=3 \
+      -use_direct_io_for_flush_and_compaction=true -use_direct_reads=true -cache_size=268435456 \
+      -key_size=48 -value_size=43 -num=50000000 -db=${DB_PATH}
+  fi
 
   sleep 1
   # rm -rf /home/data/983dct-non-iod/test.0.0

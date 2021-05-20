@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     }
     if (argc < 3)
     {
+        std::cerr << "parsing blktrace" << std::endl;
         std::cerr << "Invalid number of arguments." << std::endl;
         std::cerr << argv[0] << " <trace file> <output file>" << std::endl;
         return 1;
@@ -66,7 +67,7 @@ int main(int argc, char *argv[])
         {
             // std::cerr << "match[0]: " << match[0].str().c_str() << " match[1]: " << match[1].str().c_str() << std::endl;
 
-            if (match[3].str().at(0) == 'D')
+            if (match[3].str().at(0) == 'D' || match[3].str().at(0) == 'C')
             {
                 char rwsb = match[4].str().at(0);
                 // Check rwsb

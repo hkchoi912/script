@@ -1,11 +1,11 @@
 blkparse_result_dir: "/home/data/iod/DB-data"
-blkparse_result_format: "output"
+blkparse_result_format: "output-dc"
 parsing_result_dir: "/home/data/iod/DB-data/parsing"
 parsing_result_format: ".parsing"
 blkparse_raw_dir: "/home/data/iod/DB-data/raw"
 delimiter: '\s+'
 # program: 'db_bench'    #db_bench가 dispatch한 io만 뽑음. kworker를 빼야 되는 건가?
-iotype: 'R'            #any iotype that contain thw word. ex)W > W, WS, ...
+iotype: 'W'            #any iotype that contain thw word. ex)W > W, WS, ...
 names:
   [
     "dev<mjr,mnr>",
