@@ -60,17 +60,19 @@ int main(int argc, char *argv[])
         {
             // std::cerr << "match[0]: " << match[0].str().c_str() << " match[1]: " << match[1].str().c_str() << std::endl;
 
-            if (match[3].str().at(0) == 'D' || match[3].str().at(0) == 'C')
-            {
+            // if (match[3].str().at(0) == 'D' || match[3].str().at(0) == 'C')
+            // {
                 char rwsb = match[4].str().at(0);
                 // Check rwsb
                 if (rwsb != 'R' && rwsb != 'W')
                 {
                     continue;
                 }
+
+                if ()
                 output.write(match[0].str().c_str(), line.length());
                 output.write("\n", 1);
-            }
+            // }
         }
     }
 
