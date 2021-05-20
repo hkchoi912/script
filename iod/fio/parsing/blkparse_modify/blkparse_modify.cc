@@ -11,10 +11,11 @@ int main(int argc, char *argv[])
 {
     char *tracepath = nullptr;
     char *outputpath = nullptr;
+    int i = 0;
 
     std::ifstream trace;
     std::ofstream output;
-    
+
     // Read device name, trace file and delay
     if (argc >= 3)
     {
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
 
     // Open trace file
     trace.open(tracepath);
-    output.open(outputpath, std::ofstream::out | std::ofstream::trunc);     // open with delete contents
+    output.open(outputpath, std::ofstream::out | std::ofstream::trunc); // open with delete contents
 
     if (!trace.is_open())
     {
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
         int ret;
         std::string line;
         std::smatch match;
+        std::smatch delay_array[100];
 
         std::getline(trace, line);
 
@@ -58,23 +60,30 @@ int main(int argc, char *argv[])
          */
         if (std::regex_match(line, match, regex_blkparse))
         {
-            // std::cerr << "match[0]: " << match[0].str().c_str() << " match[1]: " << match[1].str().c_str() << std::endl;
+            char rwsb = match[4].str().at(0);
+            // Check rwsb
+            if (rwsb != 'R' && rwsb != 'W')
+            {
+                continue;
+            }
+            std::cerr << "qqq"
+                      << std::endl;
 
-            // if (match[3].str().at(0) == 'D' || match[3].str().at(0) == 'C')
-            // {
-                char rwsb = match[4].str().at(0);
-                // Check rwsb
-                if (rwsb != 'R' && rwsb != 'W')
-                {
-                    continue;
-                }
-
-                if ()
+            // if D & W & >512, delay
+            if (match[3].str().at(0) == 'D' && rwsb == 'WS' && (uint64_t)strtoull(match[6].str().c_str(), nullptr, 10) >= 512)
+            {
+                std::cerr << i << std::endl;
+                delay_array[i] = match;
+                i++
+            }
+            else
+            {
+                std::cerr << "gg\n"
+                          << std::endl;
                 output.write(match[0].str().c_str(), line.length());
                 output.write("\n", 1);
-            // }
+            }
         }
     }
-
     return 0;
 }
