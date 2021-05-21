@@ -127,6 +127,7 @@ int main(int argc, char *argv[])
                         {
                             //todo. continue 확인 필요
                             readoutput.write(readDlog[k].offset, sizeof(uint64_t));
+                            readoutput.write()
                             continue;
                         }
                     }
