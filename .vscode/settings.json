@@ -3,6 +3,8 @@
         "iosfwd": "cpp",
         "fstream": "cpp",
         "*.tcc": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "array": "cpp",
+        "string_view": "cpp"
     }
 }
