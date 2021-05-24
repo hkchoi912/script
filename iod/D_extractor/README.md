@@ -1,3 +1,7 @@
-blkparse /homa/data/iod/DB-data/nvme2n1 -o output
+#### D extractor
+- extract D for replayer or delay_write_replayer
 
-./D_extractor /home/data/iod/DB-data/output /home/data/iod/DB-data/output-dc
+#### fast cmd
+```shell
+./D_extractor /home/data/iod/DB-data/blkparse_output /home/data/iod/DB-data/blkparse_output_d
+```
