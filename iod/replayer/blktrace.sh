@@ -7,18 +7,21 @@ DEV=/dev/$DEV_NAME
 
 # blktrace
 BLKTRACE_RESULT_PATH="/home/data/iod/DB-data"
-RUNTIME=120 # sec
+RUNTIME=1200 # sec
+
+# replayer
+INPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse_q
 
 # blkparse
-FIRST_BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse
-SECOND_BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_blkparse
+BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_blkparse
 
 # D extractor
 D_extractor_PATH="/home/hkchoi/script/iod/D_extractor"
-D_extractor_OUTPUT=${FIRST_BLKPARSE_OUTPUT}_d
+D_extractor_OUTPUT=${BLKPARSE_OUTPUT}_d
 
-# delay_write
-INPUT=${D_extractor_OUTPUT}
+# Q extractor
+Q_extractor_PATH="/home/hkchoi/script/iod/Q_extractor"
+Q_extractor_OUTPUT=${BLKPARSE_OUTPUT}_q
 
 # D2C extractor
 D2C_extractor_PATH="/home/hkchoi/script/iod/D2C_extractor"
@@ -50,30 +53,40 @@ main() {
     mkdir -p ${BLKTRACE_RESULT_PATH}
   fi
 
-  # sleep 1
-  # sync
-  # echo "  Flushing..."
-  # nvme flush $DEV -n $NAMESPACE
+  sleep 1
+  sync
+  echo "  Flushing..."
+  nvme flush $DEV -n $NAMESPACE
 
-  # echo "  extract D "
-  # $D_extractor_PATH/D_extractor ${FIRST_BLKPARSE_OUTPUT} ${D_extractor_OUTPUT}
+  REPLAYER_PIDS=()
 
-  echo "  blktrace start..."
+  echo "  blktrace start...   $(date)"
   blktrace_start
 
-  # ./delay_write_replayer $DEV $INPUT
-  ./replayer $DEV ${D_extractor_OUTPUT}
+  ./replayer $DEV ${INPUT} &
+
+  REPLAYER_PIDS+=("$!")
+
+  sleep $RUNTIME
+
+  pid_kills REPLAYER_PIDS[@] > /dev/null
 
   echo "  blktrace end..."
   blktrace_end
 
   echo "  blkparse do..."
-  blkparse -i ${BLKTRACE_RESULT_PATH}/$DEV_NAME -o ${SECOND_BLKPARSE_OUTPUT} >/dev/null
+  blkparse -i ${BLKTRACE_RESULT_PATH}/$DEV_NAME -o ${BLKPARSE_OUTPUT} >/dev/null
 
   rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
 
+  echo "  extract D "
+  $D_extractor_PATH/D_extractor ${BLKPARSE_OUTPUT} ${D_extractor_OUTPUT}
+
+  echo "  extract Q "
+  $Q_extractor_PATH/Q_extractor ${BLKPARSE_OUTPUT} ${Q_extractor_OUTPUT}
+
   echo "  extract D2C time"
-  ${D2C_extractor_PATH}/D2C_extractor ${SECOND_BLKPARSE_OUTPUT} ${D2C_READ} ${D2C_WRITE}
+  ${D2C_extractor_PATH}/D2C_extractor ${BLKPARSE_OUTPUT} ${D2C_READ} ${D2C_WRITE}
 }
 
 main $1

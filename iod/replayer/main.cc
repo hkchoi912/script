@@ -16,9 +16,9 @@
 #include <stddef.h>
 
 #define SEC_TO_NS 1000000000
-#define MAX_DEPTH 1024
+#define MAX_DEPTH 2048 // ~1024
 #define MAX_EVENT 32
-#define RANDOM_FILE "/home/hkchoi/Downloads/iod/replayer/random.bin"
+#define RANDOM_FILE "/home/hkchoi/script/iod/replayer/random.bin"
 
 #ifndef TIME_FACTOR
 #define TIME_FACTOR 1
@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
 
     if (std::regex_match(line, match, regex_blkparse)) {
       // Check dispatch
-      if (match[3].str().at(0) == 'D') {
+      if (match[3].str().at(0) == 'Q') {
         char rwsb = match[4].str().at(0);
 
         // Check rwsb
