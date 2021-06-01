@@ -33,10 +33,12 @@ struct regexio
     const char *iotype;
     uint64_t offset;
     uint64_t length;
+    const char *workload;
 };
 
 // Time in seconds, Action, Action, Offset, Length
-std::regex regex_blkparse("\\d+,\\d+ +\\d+ +\\d+ +(\\d+)\\.(\\d+) +\\d+ +(\\w) +(\\w+) +(\\d+) \\+ (\\d+).*");
+// std::regex regex_blkparse("\\d+,\\d+ +\\d+ +\\d+ +(\\d+)\\.(\\d+) +\\d+ +(\\w) +(\\w+) +(\\d+) \\+ (\\d+).*");
+std::regex regex_blkparse("\\d+,\\d+ +\\d+ +\\d+ +(\\d+)\\.(\\d+) +\\d+ +(\\w) +(\\w+) +(\\d+) \\+ (\\d+) +\\[(.*)\\].*");
 
 int main(int argc, char *argv[])
 {
@@ -99,6 +101,9 @@ int main(int argc, char *argv[])
          * match[2] : msec
          * match[3] : Action
          * match[4] : io type
+         * match[5] : offset
+         * match[6] : length
+         * match[7] : workload
          */
         if (std::regex_match(line, match, regex_blkparse))
         {
@@ -119,11 +124,11 @@ int main(int argc, char *argv[])
                     readDlog[i].iotype = match[4].str().c_str();
                     readDlog[i].offset = (uint64_t)strtoull(match[5].str().c_str(), nullptr, 10);
                     readDlog[i].length = (uint64_t)strtoull(match[6].str().c_str(), nullptr, 10);
+                    readDlog[i].workload = match[7].str().c_str();
 
                     if (i < MAX_DEPTH - 1)
                         i++;
                     else
-                        //todo. 현재 i가 9999면 0으로 초기화
                         i = 0;
                 }
                 else
@@ -134,6 +139,7 @@ int main(int argc, char *argv[])
                     writeDlog[j].iotype = match[4].str().c_str();
                     writeDlog[j].offset = (uint64_t)strtoull(match[5].str().c_str(), nullptr, 10);
                     writeDlog[j].length = (uint64_t)strtoull(match[6].str().c_str(), nullptr, 10);
+                    writeDlog[j].workload = match[7].str().c_str();
 
                     if (j < MAX_DEPTH)
                         j++;
@@ -178,7 +184,7 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[k].workload + "\n";
                                 readoutput.write(strout.c_str(), strout.length());
 
                                 readfind = true;
@@ -210,7 +216,7 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[k].workload + "\n";
                                 readoutput.write(strout.c_str(), strout.length());
 
                                 readfind = true;
@@ -245,7 +251,7 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +writeDlog[l].workload + "\n";
                                 writeoutput.write(strout.c_str(), strout.length());
 
                                 writefind = true;
@@ -277,7 +283,7 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[l].workload + "\n";
                                 writeoutput.write(strout.c_str(), strout.length());
 
                                 writefind = true;

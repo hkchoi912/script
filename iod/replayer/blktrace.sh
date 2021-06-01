@@ -6,11 +6,12 @@ DEV_NAME=$CHARACTER"n"$NAMESPACE
 DEV=/dev/$DEV_NAME
 
 # blktrace
-BLKTRACE_RESULT_PATH="/home/data/iod/DB-data"
+BLKTRACE_RESULT_PATH="/home/data/iod/DB-data/output/replayer"
 RUNTIME=1200 # sec
 
 # replayer
-INPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse_q
+REPLAYER_PATH="/home/hkchoi/script/iod/replayer"
+INPUT="/home/data/iod/DB-data/output/dbbench/dbbench_blkparse_q"
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_blkparse
@@ -25,8 +26,12 @@ Q_extractor_OUTPUT=${BLKPARSE_OUTPUT}_q
 
 # D2C extractor
 D2C_extractor_PATH="/home/hkchoi/script/iod/D2C_extractor"
-D2C_READ=${BLKTRACE_RESULT_PATH}/replayer_d2c_read
-D2C_WRITE=${BLKTRACE_RESULT_PATH}/replayer_d2c_write
+D2C_READ_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_d2c_read
+D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_d2c_write
+
+# cdf & tail latency
+CDF_extractor="/home/hkchoi/script/iod/fio/cdf"
+LAT_extractor="/home/hkchoi/script/iod/fio/cdf"
 
 pid_kills() {
   PIDS=("${!1}")
@@ -56,14 +61,14 @@ main() {
   sleep 1
   sync
   echo "  Flushing..."
-  nvme flush $DEV -n $NAMESPACE
+  sudo nvme flush $DEV -n $NAMESPACE
 
   REPLAYER_PIDS=()
 
   echo "  blktrace start...   $(date)"
   blktrace_start
 
-  ./replayer $DEV ${INPUT} &
+  sudo ${REPLAYER_PATH}/replayer $DEV ${INPUT} &
 
   REPLAYER_PIDS+=("$!")
 
@@ -86,7 +91,13 @@ main() {
   $Q_extractor_PATH/Q_extractor ${BLKPARSE_OUTPUT} ${Q_extractor_OUTPUT}
 
   echo "  extract D2C time"
-  ${D2C_extractor_PATH}/D2C_extractor ${BLKPARSE_OUTPUT} ${D2C_READ} ${D2C_WRITE}
+  ${D2C_extractor_PATH}/D2C_extractor ${BLKPARSE_OUTPUT} ${D2C_READ_OUTPUT} ${D2C_WRITE_OUTPUT}
+  
+  echo "  cdf & tail latency"
+  python ${CDF_extractor}/cdf_extractor.py ${D2C_READ_OUTPUT}
+  source ${LAT_extractor}/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
+  python ${CDF_extractor}/cdf_extractor.py ${D2C_WRITE_OUTPUT}
+  source ${LAT_extractor}/lat_extractor.sh ${D2C_WRITE_OUTPUT}_cdf  
 }
 
 main $1
