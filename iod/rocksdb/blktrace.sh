@@ -102,6 +102,9 @@ main() {
 
   rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
 
+  echo "  save rocksDB LOG..."
+  cp ${DB_PATH}/LOG ${BLKTRACE_RESULT_PATH}
+
   echo "  extract D "
   $D_extractor_PATH/D_extractor ${BLKPARSE_OUTPUT} ${D_extractor_OUTPUT}
 
