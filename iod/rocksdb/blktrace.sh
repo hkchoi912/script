@@ -7,11 +7,12 @@ DEV=/dev/$DEV_NAME
 
 # blktrace
 BLKTRACE_RESULT_PATH="/home/data/iod/DB-data/output/dbbench/"
-RUNTIME=1200 # sec
+RUNTIME=10800 # sec
 
 #rocksdb
 ROCKSDB_PATH="/home/hkchoi/Downloads/iod/facebook/rocksdb"
 DB_PATH="/home/data/983dct-iod/randomKV"
+# DB_PATH="/home/data/983dct-non-iod/randomKV"
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse
@@ -33,11 +34,10 @@ D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_d2c_write
 CDF_extractor="/home/hkchoi/script/iod/fio/cdf"
 LAT_extractor="/home/hkchoi/script/iod/fio/cdf"
 
-
 pid_kills() {
   PIDS=("${!1}")
   for pid in "${PIDS[*]}"; do
-    sudo kill -15 $pid
+    sudo kill -15 $pid >/dev/null
   done
 }
 
@@ -64,7 +64,7 @@ main() {
     echo "Need to make initial DB? no=0, yes=1"
     kill -15 $$
   elif [ $1 -eq "1" ]; then
-    rm -rf ${DB_PATH}/*
+    sudo rm -rf ${DB_PATH}/*
 
     ${ROCKSDB_PATH}/db_bench –benchmarks=fillrandom –perf_level=3 \
       -use_direct_io_for_flush_and_compaction=true -use_direct_reads=true -cache_size=268435456 \
@@ -92,7 +92,7 @@ main() {
 
   sleep $RUNTIME
 
-  pid_kills ROCKSDB_PIDS[@] > /dev/null
+  pid_kills ROCKSDB_PIDS[@] >/dev/null
 
   echo "  blktrace end..."
   blktrace_end
@@ -119,6 +119,9 @@ main() {
   source ${LAT_extractor}/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
   python ${CDF_extractor}/cdf_extractor.py ${D2C_WRITE_OUTPUT}
   source ${LAT_extractor}/lat_extractor.sh ${D2C_WRITE_OUTPUT}_cdf
+  # python ${CDF_extractor}/cdf_extractor.py /home/data/iod/DB-data/output/dbbench-120min-iod/compaction_read_10min
+  # source ${LAT_extractor}/lat_extractor.sh /home/data/iod/DB-data/output/dbbench/compaction_read_cdf
+
 }
 
 main $1

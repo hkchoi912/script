@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 
         std::getline(trace, line);
 
-        /* 
+        /*
          * match[0] : line
          * match[1] : sec
          * match[2] : msec
@@ -184,7 +184,8 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[k].workload + "\n";
+                                // strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[k].workload + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
                                 readoutput.write(strout.c_str(), strout.length());
 
                                 readfind = true;
@@ -216,7 +217,8 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[k].workload + "\n";
+                                // strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[k].workload + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
                                 readoutput.write(strout.c_str(), strout.length());
 
                                 readfind = true;
@@ -251,7 +253,8 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +writeDlog[l].workload + "\n";
+                                // strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +writeDlog[l].workload + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
                                 writeoutput.write(strout.c_str(), strout.length());
 
                                 writefind = true;
@@ -283,7 +286,8 @@ int main(int argc, char *argv[])
 
                                 strout = "";
                                 strout += double_to_string(Dtime.tv_sec + (double)Dtime.tv_nsec / (double)1000000000) + " ";
-                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[l].workload + "\n";
+                                // strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + " " +readDlog[l].workload + "\n";
+                                strout += double_to_string(D2Ctime.tv_sec * 1000000 + (double)D2Ctime.tv_nsec / (double)1000) + "\n";
                                 writeoutput.write(strout.c_str(), strout.length());
 
                                 writefind = true;
