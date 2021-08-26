@@ -1,38 +1,38 @@
 #!/bin/bash
 # device
-CHARACTER="nvme2"
+CHARACTER="nvme1"
 NAMESPACE=1
 DEV_NAME=$CHARACTER"n"$NAMESPACE
 DEV=/dev/$DEV_NAME
 
 # blktrace
 BLKTRACE_RESULT_PATH="/home/data/iod/DB-data/output/dbbench/"
-RUNTIME=10800 # sec
+RUNTIME=1200 # sec
 
 #rocksdb
-ROCKSDB_PATH="/home/hkchoi/Downloads/iod/facebook/rocksdb"
-DB_PATH="/home/data/983dct-iod/randomKV"
+ROCKSDB_PATH="/home/hkchoi/research/iod/benchmark/rocksdb"
+DB_PATH="/home/iod/NVMset1/KV_DB"
 # DB_PATH="/home/data/983dct-non-iod/randomKV"
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse
 
 # D extractor
-D_extractor_PATH="/home/hkchoi/script/iod/D_extractor"
+D_extractor_PATH="/home/hkchoi/research/script/iod/D_extractor"
 D_extractor_OUTPUT=${BLKPARSE_OUTPUT}_d
 
 # Q extractor
-Q_extractor_PATH="/home/hkchoi/script/iod/Q_extractor"
+Q_extractor_PATH="/home/hkchoi/research/script/iod/Q_extractor"
 Q_extractor_OUTPUT=${BLKPARSE_OUTPUT}_q
 
 # D2C extractor
-D2C_extractor_PATH="/home/hkchoi/script/iod/D2C_extractor"
+D2C_extractor_PATH="/home/hkchoi/research/script/iod/D2C_extractor"
 D2C_READ_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_d2c_read
 D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_d2c_write
 
 # cdf & tail latency
-CDF_extractor="/home/hkchoi/script/iod/fio/cdf"
-LAT_extractor="/home/hkchoi/script/iod/fio/cdf"
+CDF_extractor="/home/hkchoi/research/script/iod/fio/cdf"
+LAT_extractor="/home/hkchoi/research/script/iod/fio/cdf"
 
 pid_kills() {
   PIDS=("${!1}")
@@ -115,10 +115,10 @@ main() {
   ${D2C_extractor_PATH}/D2C_extractor ${BLKPARSE_OUTPUT} ${D2C_READ_OUTPUT} ${D2C_WRITE_OUTPUT}
 
   echo "  cdf & tail latency"
-  python ${CDF_extractor}/cdf_extractor.py ${D2C_READ_OUTPUT}
-  source ${LAT_extractor}/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
-  python ${CDF_extractor}/cdf_extractor.py ${D2C_WRITE_OUTPUT}
-  source ${LAT_extractor}/lat_extractor.sh ${D2C_WRITE_OUTPUT}_cdf
+  # python ${CDF_extractor}/cdf_extractor.py ${D2C_READ_OUTPUT}
+  # source ${LAT_extractor}/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
+  # python ${CDF_extractor}/cdf_extractor.py ${D2C_WRITE_OUTPUT}
+  # source ${LAT_extractor}/lat_extractor.sh ${D2C_WRITE_OUTPUT}_cdf
   # python ${CDF_extractor}/cdf_extractor.py /home/data/iod/DB-data/output/dbbench-120min-iod/compaction_read_10min
   # source ${LAT_extractor}/lat_extractor.sh /home/data/iod/DB-data/output/dbbench/compaction_read_cdf
 
