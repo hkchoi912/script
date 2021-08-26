@@ -42,6 +42,10 @@ blktrace_end() {
 main() {
   sudo rm -rf $WINDOW_LOG
 
+  if [ ! -d ${BLKTRACE_RESULT_PATH} ]; then
+    mkdir -p ${BLKTRACE_RESULT_PATH}
+  fi
+
   echo "  Format..."
   sudo nvme format $DEV -s 1 -f
 
@@ -66,8 +70,6 @@ main() {
   # window check
   while [ 1 -eq 1 ]; do
     window=$(sudo nvme get-feature $DEV -n 1 -f 20 -c 1 | tail -c 2)
-
-    echo $window
 
     if [ $window == "2" ]; then
         sudo nvme admin-passthru $DEV -n 0x1 -o 0x09 -w --cdw10=0x14 --cdw11=0x01 --cdw12=0x01

@@ -6,7 +6,7 @@ DEV_NAME=$CHARACTER"n"$NAMESPACE
 DEV=/dev/$DEV_NAME
 
 # blktrace
-BLKTRACE_RESULT_PATH="/home/iod/NVMset4/blktrace"
+BLKTRACE_RESULT_PATH="/home/iod/NVMset4/GC"
 RUNTIME=1200 # sec
 
 # blkparse
@@ -37,6 +37,10 @@ blktrace_end() {
 }
 
 main() {
+  if [ ! -d ${BLKTRACE_RESULT_PATH} ]; then
+    mkdir -p ${BLKTRACE_RESULT_PATH}
+  fi
+
   echo "  Format..."
   sudo nvme format $DEV -s 1 -f
 
