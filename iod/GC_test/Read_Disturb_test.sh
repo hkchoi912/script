@@ -5,8 +5,11 @@ NAMESPACE=4
 DEV_NAME=$CHARACTER"n"$NAMESPACE
 DEV=/dev/$DEV_NAME
 
+# root path
+ROOT_PATH=/home/iod/NVMset4/Read_Disturb
+
 # blktrace
-BLKTRACE_RESULT_PATH="/home/iod/NVMset4/Read_Disturb/blktrace"
+BLKTRACE_RESULT_PATH="$ROOT_PATH/blktrace"
 RUNTIME=1200 # sec
 
 # blkparse
@@ -18,7 +21,7 @@ BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/blktrace_blkparse
 # D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/blktrace_d2c_write
 
 # window
-WINDOW_LOG=${BLKTRACE_RESULT_PATH}/window.log
+WINDOW_LOG=${ROOT_PATH}/window.log
 
 pid_kills() {
   PIDS=("${!1}")
@@ -41,6 +44,7 @@ blktrace_end() {
 
 main() {
   sudo rm -rf $WINDOW_LOG
+  touch $WINDOW_LOG
 
   if [ ! -d ${BLKTRACE_RESULT_PATH} ]; then
     mkdir -p ${BLKTRACE_RESULT_PATH}

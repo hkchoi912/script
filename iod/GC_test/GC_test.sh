@@ -5,8 +5,11 @@ NAMESPACE=4
 DEV_NAME=$CHARACTER"n"$NAMESPACE
 DEV=/dev/$DEV_NAME
 
+# root path
+ROOT_PATH=/home/iod/NVMset4/GC
+
 # blktrace
-BLKTRACE_RESULT_PATH="/home/iod/NVMset4/GC"
+BLKTRACE_RESULT_PATH="$ROOT_PATH/blktrace"
 RUNTIME=1200 # sec
 
 # blkparse
