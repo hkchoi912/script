@@ -1,64 +1,53 @@
 #!/bin/bash
+
+# if [ $(id -u) -ne 0 ]
+# then
+#   echo "Requires root privileges"
+#   exit 1
+# fi
+
+cnt=0
+
 # device
 CHARACTER="nvme1"
 NAMESPACE=1
-DEV_NAME=$CHARACTER"n"$NAMESPACE
+DEV_NAME=$CHARACTER"n"$NAMESPACE"p1"
 DEV=/dev/$DEV_NAME
 
 # blktrace
 BLKTRACE_RESULT_PATH="/home/data/iod/DB-data/output/dbbench/"
-RUNTIME=3600 # sec
+RUNTIME=1200 # sec
+
+# window
+WINDOW_LOG=${BLKTRACE_RESULT_PATH}/window.log
 
 #rocksdb
 ROCKSDB_PATH="/home/hkchoi/research/iod/benchmark/rocksdb"
-DB_PATH="/home/iod/NVMset1/KV_DB"
-# DB_PATH="/home/data/983dct-non-iod/randomKV"
-WAL_PATH="/home/iod/NVMset2/WAL"
+MOUNT_PATH="/home/iod/NVMset${NAMESPACE}"
+DB_PATH="${MOUNT_PATH}/KV_DB"
+WAL_PATH="/home/iod/NVMset4"
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse
-
-# D extractor
-D_extractor_PATH="/home/hkchoi/research/script/iod/D_extractor"
-D_extractor_OUTPUT=${BLKPARSE_OUTPUT}_d
-
-# Q extractor
-Q_extractor_PATH="/home/hkchoi/research/script/iod/Q_extractor"
-Q_extractor_OUTPUT=${BLKPARSE_OUTPUT}_q
 
 # D2C extractor
 D2C_extractor_PATH="/home/hkchoi/research/script/iod/D2C_extractor"
 D2C_READ_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_d2c_read
 D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_d2c_write
 
-# cdf & tail latency
-CDF_extractor="/home/hkchoi/research/script/iod/fio/cdf"
-LAT_extractor="/home/hkchoi/research/script/iod/fio/cdf"
-
-pid_kills() {
-  PIDS=("${!1}")
-  for pid in "${PIDS[*]}"; do
-    sudo kill -15 $pid >/dev/null
-  done
-}
-
-# -d=device, -w=second, -D=output dir
-blktrace_start() {
-  BLKTRACE_PIDS=()
-  sudo blktrace -d $DEV -w $RUNTIME -D ${BLKTRACE_RESULT_PATH} >/dev/null &
-  BLKTRACE_PIDS+=("$!")
-}
-
-blktrace_end() {
-  pid_kills BLKTRACE_PIDS[@]
-  sleep 5
-}
-
 main() {
+  sudo mount $DEV ${MOUNT_PATH}
+  sudo mount /dev/nvme1n4p1 ${WAL_PATH}
 
   if [ ! -d ${BLKTRACE_RESULT_PATH} ]; then
     mkdir -p ${BLKTRACE_RESULT_PATH}
   fi
+
+  sudo chown hkchoi:hkchoi -R /home/iod
+
+  rm -rf $WINDOW_LOG
+  touch $WINDOW_LOG
+  rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
 
   if [ $# -ne 1 ]; then
     echo $#
@@ -69,7 +58,8 @@ main() {
 
     ${ROCKSDB_PATH}/db_bench –benchmarks=fillrandom –perf_level=3 \
       -use_direct_io_for_flush_and_compaction=true -use_direct_reads=true -cache_size=268435456 \
-      -key_size=48 -value_size=43 -num=50000000 -db=${DB_PATH}
+      -key_size=48 -value_size=43 -num=50000000 -db=${DB_PATH} \
+      -wal_dir=${WAL_PATH}
   fi
 
   sleep 5
@@ -80,10 +70,15 @@ main() {
 
   sleep 5
 
-  ROCKSDB_PIDS=()
+  # set PLM
+  sudo nvme admin-passthru /dev/nvme1 -n 0x1 -o 0x09 -w --cdw10=0x13 --cdw11=0x0${NAMESPACE} --cdw12=0x01
 
-  echo "  blktrace start...   $(date)"
-  blktrace_start
+  echo "  blktrace start...   $(date)" >> $WINDOW_LOG
+  sudo blktrace -d $DEV -w $RUNTIME -D ${BLKTRACE_RESULT_PATH} >/dev/null &
+
+  # set DTWIN
+  sudo nvme admin-passthru /dev/nvme1 -n 0x1 -o 0x09 -w --cdw10=0x14 --cdw11=0x${NAMESPACE} --cdw12=0x01
+  sleep 0.02
 
   # zippydb tracing
   ${ROCKSDB_PATH}/db_bench -benchmarks="mixgraph" -use_direct_io_for_flush_and_compaction=true -use_direct_reads=true -cache_size=268435456 \
@@ -93,16 +88,24 @@ main() {
     -db=${DB_PATH} -use_existing_db=true \
     -wal_dir=${WAL_PATH} &
 
-  ROCKSDB_PIDS+=("$!")
+  # window check
+  while [ $cnt != $RUNTIME ]; do
+    window=$(sudo nvme get-feature /dev/nvme1 -n 0x1 -f 20 -c ${NAMESPACE} | tail -c 2)
 
-  sleep $RUNTIME
+    if [ $window != "1" ]; then
+      sudo nvme admin-passthru /dev/nvme1 -n 0x1 -o 0x09 -w --cdw10=0x14 --cdw11=0x${NAMESPACE} --cdw12=0x01
+      date +"%H:%M:%S.%N" >> $WINDOW_LOG
+    fi
 
-  pid_kills ROCKSDB_PIDS[@] >/dev/null
+    sleep 1
+    cnt=$(($cnt+1))
+  done
 
   echo "  blktrace end..."
-  blktrace_end
+  sudo pkill -15 db_bench
+  sudo pkill -15 blktrace
 
-  echo "  blkparse do..."
+  echo "  blkparse start...   $(date)"
   blkparse -i ${BLKTRACE_RESULT_PATH}/$DEV_NAME -o ${BLKPARSE_OUTPUT} >/dev/null
 
   rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
@@ -110,22 +113,8 @@ main() {
   echo "  save rocksDB LOG..."
   cp ${DB_PATH}/LOG ${BLKTRACE_RESULT_PATH}
 
-  echo "  extract D "
-  $D_extractor_PATH/D_extractor ${BLKPARSE_OUTPUT} ${D_extractor_OUTPUT}
-
-  echo "  extract Q "
-  $Q_extractor_PATH/Q_extractor ${BLKPARSE_OUTPUT} ${Q_extractor_OUTPUT}
-
-  echo "  extract D2C time"
+  echo "  D2C extractor start...   $(date)"
   ${D2C_extractor_PATH}/D2C_extractor ${BLKPARSE_OUTPUT} ${D2C_READ_OUTPUT} ${D2C_WRITE_OUTPUT}
-
-  echo "  cdf & tail latency"
-  # python ${CDF_extractor}/cdf_extractor.py ${D2C_READ_OUTPUT}
-  # source ${LAT_extractor}/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
-  # python ${CDF_extractor}/cdf_extractor.py ${D2C_WRITE_OUTPUT}
-  # source ${LAT_extractor}/lat_extractor.sh ${D2C_WRITE_OUTPUT}_cdf
-  # python ${CDF_extractor}/cdf_extractor.py /home/data/iod/DB-data/output/dbbench-120min-iod/compaction_read_10min
-  # source ${LAT_extractor}/lat_extractor.sh /home/data/iod/DB-data/output/dbbench/compaction_read_cdf
 
 }
 

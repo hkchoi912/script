@@ -2,7 +2,7 @@
 # device
 CHARACTER="nvme1"
 NAMESPACE=1
-DEV_NAME=$CHARACTER"n"$NAMESPACE
+DEV_NAME=$CHARACTER"n"$NAMESPACE"p1"
 DEV=/dev/$DEV_NAME
 
 # blktrace
@@ -11,19 +11,13 @@ RUNTIME=1200 # sec
 
 #rocksdb
 ROCKSDB_PATH="/home/hkchoi/research/iod/benchmark/rocksdb"
-DB_PATH="/home/iod/NVMset1/KV_DB"
+MOUNT_PATH="/home/iod/NVMset${NAMESPACE}"
+DB_PATH="${MOUNT_PATH}/KV_DB"
 # DB_PATH="/home/data/983dct-non-iod/randomKV"
+WAL_PATH="/home/iod/NVMset4"
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse
-
-# D extractor
-D_extractor_PATH="/home/hkchoi/research/script/iod/D_extractor"
-D_extractor_OUTPUT=${BLKPARSE_OUTPUT}_d
-
-# Q extractor
-Q_extractor_PATH="/home/hkchoi/research/script/iod/Q_extractor"
-Q_extractor_OUTPUT=${BLKPARSE_OUTPUT}_q
 
 # D2C extractor
 D2C_extractor_PATH="/home/hkchoi/research/script/iod/D2C_extractor"
@@ -55,9 +49,14 @@ blktrace_end() {
 
 main() {
 
+  sudo mount $DEV ${MOUNT_PATH}
+  sudo mount /dev/nvme1n4p1 ${WAL_PATH}
+
   if [ ! -d ${BLKTRACE_RESULT_PATH} ]; then
     mkdir -p ${BLKTRACE_RESULT_PATH}
   fi
+
+  sudo chown hkchoi:hkchoi -R /home/iod
 
   if [ $# -ne 1 ]; then
     echo $#
@@ -89,7 +88,8 @@ main() {
     -key_dist_a=0.002312 -key_dist_b=0.3467 -keyrange_dist_a=14.18 -keyrange_dist_b=-2.917 -keyrange_dist_c=0.0164 -keyrange_dist_d=-0.08082 \
     -keyrange_num=30 -value_k=0.2615 -value_sigma=25.45 -iter_k=2.517 -iter_sigma=14.236 -mix_get_ratio=0.83 -mix_put_ratio=0.14 -mix_seek_ratio=0.03 \
     -sine_mix_rate_interval_milliseconds=5000 -sine_a=1000 -sine_b=0.000073 -sine_d=4500 –perf_level=2 -reads=420000000 -num=50000000 -key_size=48 \
-    -db=${DB_PATH} -use_existing_db=true -wal_bytes_per_sync=1 &
+    -db=${DB_PATH} -use_existing_db=true \
+    -wal_dir=${WAL_PATH} &
 
   ROCKSDB_PIDS+=("$!")
 
@@ -108,22 +108,8 @@ main() {
   echo "  save rocksDB LOG..."
   cp ${DB_PATH}/LOG ${BLKTRACE_RESULT_PATH}
 
-  echo "  extract D "
-  $D_extractor_PATH/D_extractor ${BLKPARSE_OUTPUT} ${D_extractor_OUTPUT}
-
-  echo "  extract Q "
-  $Q_extractor_PATH/Q_extractor ${BLKPARSE_OUTPUT} ${Q_extractor_OUTPUT}
-
   echo "  extract D2C time"
   ${D2C_extractor_PATH}/D2C_extractor ${BLKPARSE_OUTPUT} ${D2C_READ_OUTPUT} ${D2C_WRITE_OUTPUT}
-
-  echo "  cdf & tail latency"
-  # python ${CDF_extractor}/cdf_extractor.py ${D2C_READ_OUTPUT}
-  # source ${LAT_extractor}/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
-  # python ${CDF_extractor}/cdf_extractor.py ${D2C_WRITE_OUTPUT}
-  # source ${LAT_extractor}/lat_extractor.sh ${D2C_WRITE_OUTPUT}_cdf
-  # python ${CDF_extractor}/cdf_extractor.py /home/data/iod/DB-data/output/dbbench-120min-iod/compaction_read_10min
-  # source ${LAT_extractor}/lat_extractor.sh /home/data/iod/DB-data/output/dbbench/compaction_read_cdf
 
 }
 

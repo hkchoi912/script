@@ -17,7 +17,7 @@ ROOT_PATH=/home/iod/NVMset1/GC/read-ndwin
 
 # blktrace
 BLKTRACE_RESULT_PATH="$ROOT_PATH/blktrace"
-RUNTIME=1200 # sec
+RUNTIME=330 # sec
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/output
@@ -39,27 +39,27 @@ main() {
   touch $WINDOW_LOG
   rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
 
-  echo "  Format..."
-  nvme format $DEV -s 1
+  # echo "  Format..."
+  # nvme format $DEV -s 1 -f
 
   # set PLM
   nvme admin-passthru /dev/nvme1 -n 0x1 -o 0x09 -w --cdw10=0x13 --cdw11=0x01 --cdw12=0x01
   # set NDWIN
   nvme admin-passthru /dev/nvme1 -n 0x1 -o 0x09 -w --cdw10=0x14 --cdw11=0x01 --cdw12=0x02
 
-  echo "  Fill..."
-  fio --direct=1 --ioengine=libaio --iodepth=64 --filename=$DEV --name=test --rw=write --bs=1M >/dev/null
+  # echo "  Fill start...   $(date)"
+  # fio --direct=1 --ioengine=libaio --iodepth=64 --filename=$DEV --name=test --rw=randwrite --bs=1M >/dev/null
 
-  echo "  fio start...   $(date)"
-  # time=msec, lat=nsec
-  fio --direct=1 --ioengine=libaio --filename=$DEV --name=test --rw=write --iodepth=64 --bs=1M --size=65G > /dev/null
+  # echo "  fio start...   $(date)"
+  # # time=msec, lat=nsec
+  # fio --direct=1 --ioengine=libaio --filename=$DEV --name=test --rw=randwrite --iodepth=64 --bs=1M --size=70G > /dev/null
 
   echo "  blktrace start...   $(date)"
   blktrace -d $DEV -w $RUNTIME -D ${BLKTRACE_RESULT_PATH} >/dev/null &
 
   echo "  fio start...   $(date)" >> $WINDOW_LOG
   # read test
-  fio --direct=1 --ioengine=libaio --filename=$DEV --name=test --rw=randread --iodepth=1 --bs=4K --runtime=$RUNTIME \
+  fio --direct=1 --ioengine=libaio --filename=$DEV --name=test --rw=read --iodepth=1 --bs=4K --runtime=$RUNTIME \
   --log_avg_msec=1 --write_lat_log=${BLKTRACE_RESULT_PATH}/read --write_bw_log=${BLKTRACE_RESULT_PATH}/read --output=${ROOT_PATH}/fio.log > /dev/null
 
   # kill blktrace

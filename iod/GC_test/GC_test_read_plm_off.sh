@@ -17,7 +17,7 @@ ROOT_PATH=/home/iod/NVMset1/GC/read-plm-off
 
 # blktrace
 BLKTRACE_RESULT_PATH="$ROOT_PATH/blktrace"
-RUNTIME=1200 # sec
+RUNTIME=330 # sec
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/output
@@ -40,17 +40,17 @@ main() {
   rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
 
   echo "  Format..."
-  nvme format $DEV -s 1
+  nvme format $DEV -s 1 -f
 
   # PLM off
   nvme admin-passthru /dev/nvme1 -n 0x1 -o 0x09 -w --cdw10=0x13 --cdw11=0x01 --cdw12=0x00
 
-  echo "  Fill..."
-  fio --direct=1 --ioengine=libaio --iodepth=64 --filename=$DEV --name=test --rw=write --bs=1M >/dev/null
+  echo "  Fill start...   $(date)"
+  fio --direct=1 --ioengine=libaio --iodepth=64 --filename=$DEV --name=test --rw=randwrite --bs=1M >/dev/null
 
   echo "  fio start...   $(date)"
   # time=msec, lat=nsec
-  fio --direct=1 --ioengine=libaio --filename=$DEV --name=test --rw=write --iodepth=64 --bs=1M --size=65G > /dev/null
+  fio --direct=1 --ioengine=libaio --filename=$DEV --name=test --rw=randwrite --iodepth=64 --bs=1M --size=65G > /dev/null
 
   echo "  blktrace start...   $(date)"
   blktrace -d $DEV -w $RUNTIME -D ${BLKTRACE_RESULT_PATH} >/dev/null &

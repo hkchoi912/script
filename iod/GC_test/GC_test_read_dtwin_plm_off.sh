@@ -19,7 +19,7 @@ ROOT_PATH=/home/iod/NVMset1/GC/read-dtwin-plm-off
 
 # blktrace
 BLKTRACE_RESULT_PATH="$ROOT_PATH/blktrace"
-RUNTIME=1200 # sec
+RUNTIME=330 # sec
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/output
@@ -42,7 +42,7 @@ main() {
   rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
 
   echo "  Format..."
-  nvme format $DEV -s 1
+  nvme format $DEV -s 1 -f
 
   # set PLM
   nvme admin-passthru /dev/nvme1 -n 0x1 -o 0x09 -w --cdw10=0x13 --cdw11=0x01 --cdw12=0x01
