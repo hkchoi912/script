@@ -22,12 +22,12 @@ BLKTRACE_RESULT_PATH="$ROOT_PATH/blktrace"
 RUNTIME=330 # sec
 
 # blkparse
-BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/output
+BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/read-dtwin-plm-off-output
 
 # D2C extractor
 D2C_extractor_PATH="/home/hkchoi/research/script/iod/D2C_extractor"
-D2C_READ_OUTPUT=${BLKTRACE_RESULT_PATH}/output-read
-D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/output-write
+D2C_READ_OUTPUT=${BLKTRACE_RESULT_PATH}/read-dtwin-plm-off-output-read
+D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/read-dtwin-plm-off-output-write
 
 # window
 WINDOW_LOG=${ROOT_PATH}/window.log

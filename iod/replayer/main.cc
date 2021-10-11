@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
 
         if (std::regex_match(line, match, regex_blkparse)) {
             // Check dispatch
-            if (match[3].str().at(0) == 'Q') {
+            if (match[3].str().at(0) == 'D') {
                 char rwsb = match[4].str().at(0);
 
                 // Check rwsb
@@ -296,17 +296,17 @@ int main(int argc, char *argv[]) {
                     continue;
                 }
 
-                // Get time value
-                start.tv_sec = atoll(match[1].str().c_str()) / TIME_FACTOR + iobegin.tv_sec;
-                start.tv_nsec = atol(match[2].str().c_str()) / TIME_FACTOR + iobegin.tv_nsec;
+                // // Get time value
+                // start.tv_sec = atoll(match[1].str().c_str()) / TIME_FACTOR + iobegin.tv_sec;
+                // start.tv_nsec = atol(match[2].str().c_str()) / TIME_FACTOR + iobegin.tv_nsec;
 
-                if (start.tv_nsec >= SEC_TO_NS) {
-                    start.tv_sec += 1;
-                    start.tv_nsec -= SEC_TO_NS;
-                }
+                // if (start.tv_nsec >= SEC_TO_NS) {
+                //     start.tv_sec += 1;
+                //     start.tv_nsec -= SEC_TO_NS;
+                // }
 
-                // Sleep
-                sleep_ns(&start);
+                // // Sleep
+                // sleep_ns(&start);
 
                 // Dispatch
                 if (queue.incTail()) {
