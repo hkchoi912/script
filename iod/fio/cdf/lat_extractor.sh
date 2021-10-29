@@ -20,8 +20,8 @@
 
 CDF_OUTPUT=$1
 
-LAT50=$(sed -rn 's/^([0-9].+),0.50.+$/\1/p' ${CDF_OUTPUT} | head -n 1)
-LAT90=$(sed -rn 's/^([0-9].+),0.90.+$/\1/p' ${CDF_OUTPUT} | head -n 1)
+LAT50=$(sed -rn 's/^([0-9].+),0.5.+$/\1/p' ${CDF_OUTPUT} | head -n 1)
+LAT90=$(sed -rn 's/^([0-9].+),0.9.+$/\1/p' ${CDF_OUTPUT} | head -n 1)
 LAT99=$(sed -rn 's/^([0-9].+),0.99.+$/\1/p' ${CDF_OUTPUT} | head -n 1)
 LAT999=$(sed -rn 's/^([0-9].+),0.999.+$/\1/p' ${CDF_OUTPUT} | head -n 1)
 LAT9999=$(sed -rn 's/^([0-9].+),0.9999.+$/\1/p' ${CDF_OUTPUT} | head -n 1)
