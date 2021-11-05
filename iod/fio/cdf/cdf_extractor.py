@@ -4,10 +4,10 @@
 # make io latency log to cdf format
 #
 # "python cdf.py"
-#   
-# D2C_extractor_output & format : set input file  
+#
+# input & format : set input file
 # csv_dir & formatted : set output csv file
-#   
+#
 # input format example
 #    time           latency    don'care
 #    0.000013355    98.004     512
@@ -28,7 +28,7 @@ import glob
 from bisect import bisect_left
 from multiprocessing import Pool
 
-D2C_extractor_output= sys.argv[1]
+input= sys.argv[1]
 csv_format= '_cdf'
 
 class discrete_cdf:
@@ -58,14 +58,14 @@ def blktrace_latency(file):
 
     xvalues, yvalues = cal_cdf(distance)
     df = pd.DataFrame({"distance": xvalues, "cdf": yvalues})
-   
+
     output_file = file + csv_format
 
     df.to_csv(output_file, index=False)
 
 
-def main():   
-    file = [D2C_extractor_output]
+def main():
+    file = [input]
 
     with Pool(processes=4) as pool:
         pool.map(blktrace_latency, file)

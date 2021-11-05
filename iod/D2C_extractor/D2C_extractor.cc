@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
          * match[7] : workload
          */
         if (std::regex_match(line, match, regex_blkparse)) {
-            if (match[3].str().at(0) == 'D') {
+            if (match[3].str().at(0) == 'Q') {
                 char rwsb = match[4].str().at(0);
 
                 if (rwsb != 'R' && rwsb != 'W') {

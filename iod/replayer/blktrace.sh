@@ -1,55 +1,37 @@
 #!/bin/bash
 # device
-CHARACTER="nvme2"
-NAMESPACE=1
+CHARACTER="nvme1"
+NAMESPACE=2
 DEV_NAME=$CHARACTER"n"$NAMESPACE
 DEV=/dev/$DEV_NAME
 
+OUTPUT_PATH=$1
+
 # blktrace
-BLKTRACE_RESULT_PATH="/home/data/iod/DB-data/output/replayer"
-RUNTIME=1200 # sec
+BLKTRACE_RESULT_PATH="$OUTPUT_PATH/blktrace"
 
 # replayer
-REPLAYER_PATH="/home/hkchoi/script/iod/replayer"
-INPUT="/home/data/iod/DB-data/output/dbbench/dbbench_blkparse_q"
+REPLAYER_PATH="/root/workspace/script/iod/replayer"
+INPUT="$BLKTRACE_RESULT_PATH/trace_nvme1n2.txt"
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_blkparse
 
-# D extractor
-D_extractor_PATH="/home/hkchoi/script/iod/D_extractor"
-D_extractor_OUTPUT=${BLKPARSE_OUTPUT}_d
-
-# Q extractor
-Q_extractor_PATH="/home/hkchoi/script/iod/Q_extractor"
-Q_extractor_OUTPUT=${BLKPARSE_OUTPUT}_q
-
 # D2C extractor
-D2C_extractor_PATH="/home/hkchoi/script/iod/D2C_extractor"
-D2C_READ_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_d2c_read
-D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_d2c_write
-
-# cdf & tail latency
-CDF_extractor="/home/hkchoi/script/iod/fio/cdf"
-LAT_extractor="/home/hkchoi/script/iod/fio/cdf"
+D2C_extractor_PATH="/root/workspace/script/iod/D2C_extractor"
+D2C_READ_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_d2c_read.txt
+D2C_WRITE_OUTPUT=${BLKTRACE_RESULT_PATH}/replayer_d2c_write.txt
 
 pid_kills() {
   PIDS=("${!1}")
   for pid in "${PIDS[*]}"; do
-    sudo kill -15 $pid
+    kill -15 $pid
   done
 }
 
 # -d=device, -w=second, -D=output dir
 blktrace_start() {
-  BLKTRACE_PIDS=()
-  sudo blktrace -d $DEV -w $RUNTIME -D ${BLKTRACE_RESULT_PATH} >/dev/null &
-  BLKTRACE_PIDS+=("$!")
-}
-
-blktrace_end() {
-  pid_kills BLKTRACE_PIDS[@]
-  sleep 5
+  blktrace -d $DEV -D ${BLKTRACE_RESULT_PATH} >/dev/null &
 }
 
 main() {
@@ -58,46 +40,42 @@ main() {
     mkdir -p ${BLKTRACE_RESULT_PATH}
   fi
 
+  if [ $# -ne 1 ]; then
+    echo "Need to make input trace path"
+    kill -15 $$
+  fi
+
   sleep 1
   sync
-  echo "  Flushing..."
-  sudo nvme flush $DEV -n $NAMESPACE
 
-  REPLAYER_PIDS=()
+  nvme format /dev/nvme1n2 -s 1
+  sleep 3
+
+  echo "  Fill..."
+  fio --direct=1 --ioengine=libaio --iodepth=64 --filename=$DEV --name=test --rw=write --bs=1M >/dev/null
+
+  echo "  Op Fill..."
+  fio --direct=1 --ioengine=libaio --filename=$DEV --name=test --rw=write --iodepth=64 --bs=1M --size=65G >/dev/null
 
   echo "  blktrace start...   $(date)"
   blktrace_start
 
-  sudo ${REPLAYER_PATH}/replayer $DEV ${INPUT} &
-
-  REPLAYER_PIDS+=("$!")
-
-  sleep $RUNTIME
-
-  pid_kills REPLAYER_PIDS[@] > /dev/null
+  # ${REPLAYER_PATH}/replayer $DEV ${INPUT}
+  ./replayer /dev/nvme1n2 ${INPUT}
 
   echo "  blktrace end..."
-  blktrace_end
+  killall blktrace
 
   echo "  blkparse do..."
   blkparse -i ${BLKTRACE_RESULT_PATH}/$DEV_NAME -o ${BLKPARSE_OUTPUT} >/dev/null
 
-  rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
-
-  echo "  extract D "
-  $D_extractor_PATH/D_extractor ${BLKPARSE_OUTPUT} ${D_extractor_OUTPUT}
-
-  echo "  extract Q "
-  $Q_extractor_PATH/Q_extractor ${BLKPARSE_OUTPUT} ${Q_extractor_OUTPUT}
+  # rm -rf ${BLKTRACE_RESULT_PATH}/nvme*
 
   echo "  extract D2C time"
   ${D2C_extractor_PATH}/D2C_extractor ${BLKPARSE_OUTPUT} ${D2C_READ_OUTPUT} ${D2C_WRITE_OUTPUT}
-  
-  echo "  cdf & tail latency"
-  python ${CDF_extractor}/cdf_extractor.py ${D2C_READ_OUTPUT}
-  source ${LAT_extractor}/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
-  python ${CDF_extractor}/cdf_extractor.py ${D2C_WRITE_OUTPUT}
-  source ${LAT_extractor}/lat_extractor.sh ${D2C_WRITE_OUTPUT}_cdf  
+
+  python3 /root/workspace/script/iod/fio/cdf/cdf_extractor.py ${D2C_READ_OUTPUT}
+  source /root/workspace/script/iod/fio/cdf/lat_extractor.sh ${D2C_READ_OUTPUT}_cdf
 }
 
 main $1
