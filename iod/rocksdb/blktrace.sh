@@ -10,9 +10,10 @@ BLKTRACE_RESULT_PATH="/home/data/iod/DB-data/output/dbbench/"
 RUNTIME=1200 # sec
 
 #rocksdb
-ROCKSDB_PATH="/home/hkchoi/research/iod/benchmark/rocksdb"
-DB_PATH="/home/iod/NVMset1/KV_DB"
+ROCKSDB_PATH="/home/hkchoi/research/learned-compaction/rocksdb"
+# DB_PATH="/home/iod/NVMset1/KV_DB"
 # DB_PATH="/home/data/983dct-non-iod/randomKV"
+DB_PATH="/home/mnt/nvme1n1/rocksdb"
 
 # blkparse
 BLKPARSE_OUTPUT=${BLKTRACE_RESULT_PATH}/dbbench_blkparse
